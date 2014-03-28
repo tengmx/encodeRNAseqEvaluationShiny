@@ -66,6 +66,8 @@ sdaplot_scale <- function(quant,medians,colors,text,xlim,ylim,xlab,ylab,main){
         text(quantile(xlim,0.65),quantile(ylim,1-i*0.08),pos=4,
              labels=paste0(text[i],"_K562"))
     }
+    text(quantile(xlim,0.1),quantile(ylim,0.95),pos=4,
+                      labels=paste0("FPKM:1 ~ D:",round(-mean(medians[4:5]),2)))
 }
 
 p0plot_scale <- function(quant,medians,step,colors,text,xlim,ylim,xlab,ylab,main){
@@ -192,14 +194,12 @@ catplot_microarray <- function(quant,array,colors,text,xlim,ylim,
 
 colors <- c("brown","red","royalblue","seagreen","olivedrab1","purple",
             "maroon1","black","orange","yellow")
+labels <- c("rsem","rsem_pme","flux","cuff_s","cuff_t","sailfish","express","naive")
 shinyServer(function(input, output) {
   packs <- reactive({
     load(paste0(input$protocol,"_g.rda"))
     medians <- hkctr(quant,"HK_genes.txt","gene.gtf")
-    thresholds <- c(input$cutoff1,input$cutoff2,input$cutoff3,input$cutoff4,
-                  input$cutoff5,input$cutoff6,input$cutoff7,input$cutoff8)
-    labels <- c(input$rsemtpm,input$rsempmetpm,input$fluxcapacitor,input$cufflinkss,
-                input$cufflinkst,input$sailfish,input$express,input$naive)
+    thresholds <- 2^(input$cutD+medians)
     quant <- typefilter(quant,input$genetype,"gene.gtf")
     quant <- cutfilter(quant,thresholds)
     cat(thresholds,"\n")
