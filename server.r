@@ -1,4 +1,6 @@
 library(shiny)
+
+## calculate standardizing coefficients based on house keeping genes
 hkctr <- function(quant,hkpfile,genefile){
     library(matrixStats,quietly=T)
     gene <- read.delim(genefile,skip=5,header=FALSE,stringsAsFactors=FALSE,
@@ -13,6 +15,7 @@ hkctr <- function(quant,hkpfile,genefile){
     colMeans(log2(sapply(quant,function(x) colMedians(x[housekeep_index,]))))
 }
 
+## filter quantification table by gene types
 typefilter <- function(quant,genetype,genefile){
     gene <- read.delim(genefile,skip=5,header=FALSE,stringsAsFactors=FALSE,
             colClasses=c("character","character","character","integer","integer",
@@ -28,6 +31,7 @@ typefilter <- function(quant,genetype,genefile){
     quantable
 }
 
+## set signals less than cutoffs to zero
 cutfilter <- function(quant,cuts){
     for(i in 1:length(quant)){
         quant[[i]][quant[[i]]<cuts[i]] <- 0
@@ -35,6 +39,7 @@ cutfilter <- function(quant,cuts){
     quant
 }
 
+## plot repliates variation stratified by D 
 sdaplot_scale <- function(quant,medians,colors,text,xlim,ylim,xlab,ylab,main){
     for(i in 1:length(quant)){
         quant[[i]] <- log2(quant[[i]])
@@ -70,6 +75,7 @@ sdaplot_scale <- function(quant,medians,colors,text,xlim,ylim,xlab,ylab,main){
                       labels=paste0("FPKM:1 ~ D:",round(-mean(medians[4:5]),2)))
 }
 
+## plot 0s' information stratified by D 
 p0plot_scale <- function(quant,medians,step,colors,text,xlim,ylim,xlab,ylab,main){
     for(i in 1:length(quant)){
         index1 <- quant[[i]][,1]!=0 & quant[[i]][,2]!=0
@@ -121,25 +127,23 @@ p0plot_scale <- function(quant,medians,step,colors,text,xlim,ylim,xlab,ylab,main
          labels=c("0,0","0,1","1,1"))
 }
 
-## CAT plot on 4-column table list
-catplot <- function(quant,colors,text,xlim,ylim,xlab,ylab,main,stringent=TRUE){
+## CAT plot between replicates
+catplot <- function(quant,cuts,colors,text,xlim,ylim,xlab,ylab,main,stringent=TRUE){
     for(i in 1:length(quant)){
+        if(!stringent) quant[[i]][quant[[i]]==0] <- cuts[i]
         quant[[i]] <- log2(quant[[i]])
         fc1 <- quant[[i]][,1] - quant[[i]][,3]
         fc2 <- quant[[i]][,2] - quant[[i]][,4]
         if(stringent){
             fc1tmp <- fc1[!is.na(fc1) & !is.na(fc2)]
             fc2tmp <- fc2[!is.na(fc1) & !is.na(fc2)]
-            fc1<- fc1tmp[fc1tmp!=Inf & fc1tmp!=-Inf & fc2tmp!=Inf & fc2tmp!=-Inf]
-            fc2<- fc2tmp[fc1tmp!=Inf & fc1tmp!=-Inf & fc2tmp!=Inf & fc2tmp!=-Inf]
-        }else{
-            fc1 <- fc1[!is.na(fc1) & fc1!=Inf & fc1!=-Inf]
-            fc2 <- fc2[!is.na(fc2) & fc2!=Inf & fc2!=-Inf]
+            fc1 <- fc1tmp[fc1tmp!=Inf & fc1tmp!=-Inf & fc2tmp!=Inf & fc2tmp!=-Inf]
+            fc2 <- fc2tmp[fc1tmp!=Inf & fc1tmp!=-Inf & fc2tmp!=Inf & fc2tmp!=-Inf]
         }
         names1 <- names(fc1)[sort.list(abs(fc1),decreasing=T)]
         names2 <- names(fc2)[sort.list(abs(fc2),decreasing=T)]
         endrank <- min(xlim[2],length(names1),length(names2))
-        prop<- sapply(xlim[1]:endrank, function(x)
+        prop <- sapply(xlim[1]:endrank, function(x)
                       round(length(intersect(names1[1:x],names2[1:x]))/x,4))
         if(i==1){
             plot(xlim[1]:endrank,prop,type='l',col=colors[i],lwd=2,
@@ -154,8 +158,8 @@ catplot <- function(quant,colors,text,xlim,ylim,xlab,ylab,main,stringent=TRUE){
     }
 }
 
-## CAT plot on 4-column table list (microarray, the same name set)
-catplot_microarray <- function(quant,array,colors,text,xlim,ylim,
+## CAT plot between average of two replicates and microarray
+catplot_microarray <- function(quant,cuts,array,colors,text,xlim,ylim,
                                xlab,ylab,main,stringent=TRUE){
     load(array)
     fc2 <- fc[sort.list(abs(fc),decreasing=T)]
@@ -165,19 +169,22 @@ catplot_microarray <- function(quant,array,colors,text,xlim,ylim,
     array_names <- array_names[idx1]
     seq_names <- rownames(quant[[1]])[!is.na(match(seq_names,unlist(array_names)))]
     for(i in 1:length(quant)){
+        if(!stringent) quant[[i]][quant[[i]]==0] <- cuts[i]
         quant[[i]] <- log2(quant[[i]][seq_names,])
         fc1 <- (quant[[i]][,1] + quant[[i]][,2] - quant[[i]][,3] - quant[[i]][,4])/2
-        fc1 <- fc1[!is.na(fc1) & fc1!=Inf & fc1!=-Inf]
-        names_seq <- names(fc1)[sort.list(abs(fc1),decreasing=T)]
-        names_seq <- sapply(names_seq,function(x) strsplit(x,"\\.")[[1]][1])
         if(stringent){
+            fc1 <- fc1[!is.na(fc1) & fc1!=Inf & fc1!=-Inf]
+            names_seq <- names(fc1)[sort.list(abs(fc1),decreasing=T)]
+            names_seq <- sapply(names_seq,function(x) strsplit(x,"\\.")[[1]][1])
             names_array <- array_names[sapply(array_names,function(x)
-                               sum(!is.na(match(x,names_seq)))>0)]
+                                          sum(!is.na(match(x,names_seq)))>0)]
         }else{
+            names_seq <- names(fc1)[sort.list(abs(fc1),decreasing=T)]
+            names_seq <- sapply(names_seq,function(x) strsplit(x,"\\.")[[1]][1])
             names_array <- array_names
         }
         endrank <- min(xlim[2],length(names_seq),length(names_array))
-        prop<- sapply(xlim[1]:endrank, function(x)
+        prop <- sapply(xlim[1]:endrank, function(x)
                round(length(intersect(names_seq[1:x],unlist(names_array[1:x])))/x,4))
         if(i==1){
             plot(xlim[1]:endrank,prop,type='l',col=colors[i],lwd=2,xlim=xlim,
@@ -192,6 +199,7 @@ catplot_microarray <- function(quant,array,colors,text,xlim,ylim,
     }
 }
 
+## shiny server
 colors <- c("brown","red","royalblue","seagreen","olivedrab1","purple",
             "maroon1","black","orange","yellow")
 labels <- c("rsem","rsem_pme","flux","cuff_s","cuff_t","sailfish","express","naive")
@@ -208,7 +216,8 @@ shinyServer(function(input, output) {
     labels <- labels[all0kick]
     colors2 <- colors[which(all0kick)]
     medians <- medians[all0kick]
-    list(quant=quant,medians=medians,labels=labels,colors=colors2)
+    thresholds <- thresholds[all0kick]
+    list(quant=quant,thresholds=thresholds,medians=medians,labels=labels,colors=colors2)
   })
   output$caption <- renderText({
     input$protocol
@@ -227,25 +236,25 @@ shinyServer(function(input, output) {
   })
   output$catplot1 <- renderPlot({
       pack <- packs()
-      catplot(pack$quant,pack$colors,pack$labels,
+      catplot(pack$quant,pack$thresholds,pack$colors,pack$labels,
               xlim=c(input$xstart3,input$xend3),ylim=c(input$ystart3,input$yend3),
               xlab="Size of list",ylab="proportion in common",main=input$genetype)
   })
   output$catplot2 <- renderPlot({
     pack <- packs()
-    catplot(pack$quant,pack$colors,pack$labels,
+    catplot(pack$quant,pack$thresholds,pack$colors,pack$labels,
             xlim=c(input$xstart3,input$xend3),ylim=c(input$ystart3,input$yend3),
             xlab="Size of list",ylab="proportion in common",main=input$genetype,stringent=F)
   })
   output$catplotarray1 <- renderPlot({
       pack <- packs()
-      catplot_microarray(pack$quant,"cel.rda",pack$colors,pack$labels,
+      catplot_microarray(pack$quant,pack$thresholds,"cel.rda",pack$colors,pack$labels,
                          xlim=c(input$xstart4,input$xend4),ylim=c(input$ystart4,input$yend4),
                          xlab="Size of list",ylab="proportion in common",main=input$genetype)
   })
   output$catplotarray2 <- renderPlot({
       pack <- packs()
-      catplot_microarray(pack$quant,"cel.rda",pack$colors,pack$labels,
+      catplot_microarray(pack$quant,pack$thresholds,"cel.rda",pack$colors,pack$labels,
                          xlim=c(input$xstart4,input$xend4),ylim=c(input$ystart4,input$yend4),
                          xlab="Size of list",ylab="proportion in common",main=input$genetype,stringent=F)
   })
