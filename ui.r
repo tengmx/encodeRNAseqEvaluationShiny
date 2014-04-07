@@ -2,53 +2,180 @@ library(shiny)
 widget_style <- "display: inline-block; vertical-align: text-top; padding: 0px; border: solid;
                   border-width: 0px; border-radius: 0px; border-color: #CCC;"
 shinyUI(pageWithSidebar(
-    headerPanel("ENCODE RNAseq Evaluation"),
-    sidebarPanel(
-        wellPanel(
-            div(style = widget_style,selectInput("protocol","Choose a protocal:",
-                    list("PolyA_dUTP","PolyA_TruSeq","PolyA_SMARTseq", "Total_dUTP",
-                         "Total_TruSeq","Total_SMARTseq"))),
-            div(style = widget_style,selectInput("genetype","Choose a gene type:",
-                    list("protein_coding", "pseudogene","lincRNA","antisense"))),
-            div(style = widget_style,numericInput("cutD","Choose a cutoff D: (At FPKM 1: D= -4.67 for PolyA_dUTP; -4.68 for PolyA_TruSeq; -3.21 for PolyA_SMARTseq; -4.09 for Total_dUTP; -3.87 for Total_TruSeq; -2.95 for Total_SMARTseq)",-4.67,-10,15))
-            ),
-        wellPanel(
-            div(style = widget_style,numericInput("xstart1", "x-axis start in SD plot:", -5,-30,10)),
-            div(style = widget_style,numericInput("xend1", "x-axis end in SD plot:", 10,-10,20)),
-            div(style = widget_style,numericInput("ystart1", "y-axis start in SD plot:", 0,0,10)),
-            div(style = widget_style,numericInput("yend1", "y-axis end in SD plot:", 1,0.1,20))
-            ),
-        wellPanel(
-            div(style = widget_style,numericInput("xstart2", "x-axis start in P0 plot:", -5,-30,-5)),
-            div(style = widget_style,numericInput("xend2", "x-axis end in P0 plot:", 0,-5,20)),
-            div(style = widget_style,numericInput("ystart2", "y-axis start in P0 plot:", 0,0,0.1)),
-            div(style = widget_style,numericInput("yend2", "y-axis end in P0 plot:", 0.05,0.01,0.5))
-            ),
-        wellPanel(
-            div(style = widget_style,numericInput("xstart3", "x-axis start in CAT plot:", 20,0,500)),
-            div(style = widget_style,numericInput("xend3", "x-axis end in CAT plot:", 2000,100,10000)),
-            div(style = widget_style,numericInput("ystart3", "y-axis start in CAT plot:", 0,0,1)),
-            div(style = widget_style,numericInput("yend3", "y-axis end in CAT plot:", 1,0,1))
-            ),
-        wellPanel(
-            div(style = widget_style,numericInput("xstart4", "x-axis start in CAT plot with array:", 20,0,500)),
-            div(style = widget_style,numericInput("xend4", "x-axis end in CAT plot with array:", 2000,100,10000)),
-            div(style = widget_style,numericInput("ystart4", "y-axis start in CAT plot with array:", 0,0,1)),
-            div(style = widget_style,numericInput("yend4", "y-axis end in CAT plot with array:", 1,0,1))
-            ),
-        submitButton("Update View")
-        ),
-    mainPanel(
+  headerPanel("ENCODE RNAseq Evaluation"),
+  sidebarPanel(
+    style="min-width:235px;max-width:320px", 
+    submitButton("Update"),
+    br(),
+    HTML("<style>
+          div.pos1{
+               width:80px;
+               }
+          div.pos2{
+               width:80px;
+               }
+          .container div {
+              display: inline-block;
+              width:180px;
+              }
+          </style>
+          <div class='container'>
+              <div class='pos1'>
+                 <label>Protocol</label>
+                 <select name='protocol' style='width:120px'>
+                    <option value='PolyA_dUTP' selected='selected'>PolyA_dUTP</option>
+                    <option value='PolyA_TruSeq'>PolyA_TruSeq</option>
+                    <option value='PolyA_SMARTseq'>PolyA_SMARTseq</option>
+                    <option value='Total_dUTP'>Total_dUTP</option>
+                    <option value='Total_TruSeq'>Total_TruSeq</option>
+                    <option value='Total_SMARTseq'>Total_SMARTseq</option>
+                 </select>
+              </div>
+              <div class='pos2'>
+                 <label>Gene Type</label>
+                 <select name='genetype' style='width:120px;'>
+                    <option value='protein_coding' selected='selected'>protein coding gene</option>
+                    <option value='pseudogene'>pseudogene</option>
+                    <option value='lincRNA'>lincRNA</option>
+                    <option value='antisense'>antisense</option>
+                 </select>
+              </div>
+          </div>
+          <label>Cutoff by FPKM (Default is 1)</label> 
+          <div class='container'>   
+              <div class='pos1'>
+                 <input type='number' name='cutFPKM' style='width:105px' value='1' min='0' max='1000'/>
+              </div>
+          </div>
+
+          <br>
+          <h5>Axes of SD plot:</h5>
+          <div class='container'>
+              <div class='pos1'>
+                 <label>x-min</label>
+                 <input type='number' name='xstart1' style='width:105px' value='-5' min='-30' max='10'/>
+              </div>
+              <div class='pos2'>
+                 <label>x-max</label>
+                 <input type='number' name='xend1' style='width:105px' value='10' min='-10' max='20'/>
+              </div>
+          </div>
+          <div class='container'>
+              <div class='pos1'>
+                 <label>y-min</label>
+                 <input type='number' name='ystart1' style='width:105px' value='0' min='0' max='10'/>
+              </div>
+              <div class='pos2'>
+                 <label>y-max</label>
+                 <input type='number' name='yend1' style='width:105px' value='1' min='0.01' max='20'/>
+              </div>
+          </div>
+
+          <br>
+          <h5>Axes of P0 plot:</h5>
+          <div class='container'>
+              <div class='pos1'>
+                 <label>x-min</label>
+                 <input type='number' name='xstart2' style='width:105px' value='-5' min='-30' max='-3'/>
+              </div>
+              <div class='pos2'>
+                 <label>x-max</label>
+                 <input type='number' name='xend2' style='width:105px' value='0' min='-5' max='20'/>
+              </div>
+          </div>
+          <div class='container'>
+              <div class='pos1'>
+                 <label>y-min</label>
+                 <input type='number' name='ystart2' style='width:105px' value='0' min='0' max='0.1'/>
+              </div>
+              <div class='pos2'>
+                 <label>y-max</label>
+                 <input type='number' name='yend2' style='width:105px' value='0.05' min='0.01' max='0.5'/>
+              </div>
+          </div>
+
+          <br>
+          <h5>CAT plot between RNA-seq replicates:</h5>
+          <div class='container'>
+              <div class='pos1'>
+                 <label>x-min</label>
+                 <input type='number' name='xstart3' style='width:105px' value='20' min='1' max='500'/>
+              </div>
+              <div class='pos2'>
+                 <label>x-max</label>
+                 <input type='number' name='xend3' style='width:105px' value='2000' min='50' max='10000'/>
+              </div>
+          </div>
+          <div class='container'>
+              <div class='pos1'>
+                 <label>y-min</label>
+                 <input type='number' name='ystart3' style='width:105px' value='0' min='0' max='1'/>
+              </div>
+              <div class='pos2'>
+                 <label>y-max</label>
+                 <input type='number' name='yend3' style='width:105px' value='1' min='0' max='1'/>
+              </div>
+          </div>
+          <label>Constant to be added for the second plot</label>
+          <label>(unit: FPKM; should be <= cutoff)</label> 
+          <div class='container'>
+              <div class='pos1'>
+                 <input type='number' name='constant1' style='width:105px' value='1' min='0.00001' max='1000'/>
+              </div>
+          </div>
+
+
+          <br>
+          <h5>CAT plot between RNA-seq and microarray:</h5>
+          <div class='container'>
+              <div class='pos1'>
+                 <label>x-min</label>
+                 <input type='number' name='xstart4' style='width:105px' value='20' min='1' max='500'/>
+              </div>
+              <div class='pos2'>
+                 <label>x-max</label>
+                 <input type='number' name='xend4' style='width:105px' value='2000' min='50' max='10000'/>
+              </div>
+          </div>
+          <div class='container'>
+              <div class='pos1'>
+                 <label>y-min</label>
+                 <input type='number' name='ystart4' style='width:105px' value='0' min='0' max='1'/>
+              </div>
+              <div class='pos2'>
+                 <label>y-max</label>
+                 <input type='number' name='yend4' style='width:105px' value='1' min='0' max='1'/>
+              </div>
+          </div>
+          <label>Constant to be added for the second plot</label>
+          <label>(unit: FPKM; should be <= cutoff)</label> 
+          <div class='container'>
+              <div class='pos1'>
+                 <input type='number' name='constant2' style='width:105px' value='1' min='0.00001' max='1000'/>
+              </div>
+          </div>
+"
+         )
+    ),
+
+      mainPanel(
         h3(textOutput("caption")),
         tabsetPanel(
-            tabPanel("SD_plot",plotOutput("sdplot",width="600px", height="600px")),
-            tabPanel("P0_plot",plotOutput("p0plot",width="600px", height="600px")),
-            tabPanel("CAT_plot",wellPanel(
+            tabPanel("SD versus detrended log signal",plotOutput("sdplot",width="600px", height="600px")),
+            tabPanel("Proportion of zeros",wellPanel(
+              div(style = widget_style,plotOutput("p0plot",width="600px", height="600px")),
+              div(style = widget_style,tableOutput("p0stbl"))
+              )),
+            tabPanel("CAT plot for replicates",wellPanel(
+              #h5("First is plot based on all non-zero genes,with fold changes of genes at least have one zero in all replicates being set as 0."),
+              #h5("Second is plot based on all genes, with constant added for zeros."),
                 div(style = widget_style,plotOutput("catplot1",width="600px", height="600px")),
                 div(style = widget_style,plotOutput("catplot2",width="600px", height="600px"))
                 )),
-            tabPanel("CAT_plot_array",
-                     wellPanel(
+            tabPanel("CAT plot comparing to microarrays", wellPanel(
+              #h5("Only genes both in RNA-seq and microarray are displayed."),
+              #h5("First is plot based on all non-zero genes,with fold changes of genes at least have one zero in all replicates being set as 0."),
+              #h5("Second is plot based on all genes, with constant added for zeros."),
                          div(style = widget_style,plotOutput("catplotarray1",width="600px", height="600px")),
                          div(style = widget_style,plotOutput("catplotarray2",width="600px", height="600px"))
                          ))

@@ -47,19 +47,20 @@ sdaplot_scale <- function(quant,medians,colors,text,xlim,ylim,xlab,ylab,main){
             lines(tmp1$x,tmp1$y,type='l',col=colors[i],lwd=2)
         }
         lines(tmp2$x,tmp2$y,type='l',col=colors[i],lty=2,lwd=2)
-        lines(quantile(xlim,c(0.5,0.6)),quantile(ylim,rep(1.04-i*0.08,2)),
+        lines(quantile(xlim,c(0.6,0.7)),quantile(ylim,rep(1-i*0.04,2)),
               type='l',col=colors[i],lwd=2)
-        text(quantile(xlim,0.65),quantile(ylim,1.04-i*0.08),pos=4,
-             labels=paste0(text[i],"_GM12878"))
-        lines(quantile(xlim,c(0.5,0.6)),quantile(ylim,rep(1-i*0.08,2)),
-              type='l',col=colors[i],lwd=2,lty=2)
-        text(quantile(xlim,0.65),quantile(ylim,1-i*0.08),pos=4,
-             labels=paste0(text[i],"_K562"))
+        text(quantile(xlim,0.73),quantile(ylim,1-i*0.04),pos=4,labels=text[i])
     }
+    lines(quantile(xlim,c(0.2,0.3)),quantile(ylim,rep(0.92,2)),
+          type='l',lwd=2)
+    text(quantile(xlim,0.33),quantile(ylim,0.92),pos=4,labels="GM12878")
+    lines(quantile(xlim,c(0.2,0.3)),quantile(ylim,rep(0.88,2)),
+          type='l',lwd=2,lty=2)
+    text(quantile(xlim,0.33),quantile(ylim,0.88),pos=4,labels="K562")
 }
 
 ## plot 0s' information stratified by D 
-p0plot_scale <- function(quant,medians,step,colors,text,xlim,ylim,xlab,ylab,main){
+p0plot_scale0 <- function(quant,medians,step,colors,text,xlim,ylim,xlab,ylab,main){
     for(i in 1:length(quant)){
         index1_0 <- (quant[[i]][,1]==0 & quant[[i]][,2]!=0) |
                     (quant[[i]][,1]!=0 & quant[[i]][,2]==0)
@@ -93,25 +94,95 @@ p0plot_scale <- function(quant,medians,step,colors,text,xlim,ylim,xlab,ylab,main
         lines(quantile(xlim,c(0.4,0.45)),quantile(ylim,rep(1.04-i*0.08,2)),
               type='l',col=colors[i],lwd=2)
         text(quantile(xlim,0.47),quantile(ylim,1.04-i*0.08),pos=4,
-             labels=paste0(text[i],"_G"))
+             labels=paste0(text[i],"_GM12878"))
         text(quantile(xlim,seq(0.7,0.9,0.1)),quantile(ylim,1.04-i*0.08),pos=4,
              labels=c(both0prop1,one0prop1,bothnon0prop1))
         lines(k,p2,type='l',col=colors[i],lty=2,lwd=2)
         lines(quantile(xlim,c(0.4,0.45)),quantile(ylim,rep(1-i*0.08,2)),
               type='l',col=colors[i],lwd=2,lty=2)
         text(quantile(xlim,0.47),quantile(ylim,1-i*0.08),pos=4,
-             labels=paste0(text[i],"_K"))
+             labels=paste0(text[i],"_K562"))
         text(quantile(xlim,seq(0.7,0.9,0.1)),quantile(ylim,1-i*0.08),pos=4,
              labels=c(both0prop2,one0prop2,bothnon0prop2))
     }
     text(quantile(xlim,seq(0.7,0.9,0.1)),quantile(ylim,1),pos=4,
-         labels=c("0,0","0,1","1,1"))
+         labels=c("0,0","0,1","1,1"))    
+}
+
+
+p0plot_scale1 <- function(quant,medians,step,colors,text,xlim,ylim,xlab,ylab,main){
+    for(i in 1:length(quant)){
+        index1_0 <- (quant[[i]][,1]==0 & quant[[i]][,2]!=0) |
+                    (quant[[i]][,1]!=0 & quant[[i]][,2]==0)
+        index2_0 <- (quant[[i]][,3]==0 & quant[[i]][,4]!=0) |
+                    (quant[[i]][,3]!=0 & quant[[i]][,4]==0)
+        rep11_0 <- quant[[i]][index1_0,1]
+        rep12_0 <- quant[[i]][index1_0,2]
+        rep21_0 <- quant[[i]][index2_0,3]
+        rep22_0 <- quant[[i]][index2_0,4]
+        allunits1 <- length(index1_0)
+        allunits2 <- length(index2_0)
+        k <- seq(xlim[1],xlim[2],step)
+        p1 <- sapply(k,function(x)
+                     sum(log2(rep11_0+rep12_0)-medians[i]>x)) / allunits1
+        p2 <- sapply(k,function(x)
+                     sum(log2(rep21_0+rep22_0)-medians[i]>x)) / allunits2
+        if(i==1){
+            plot(k,p1,type='l',col=colors[i],lwd=2,xlim=xlim,ylim=ylim,
+                 xlab=xlab,ylab=ylab,main=main)
+        }else{
+            lines(k,p1,type='l',col=colors[i],lwd=2)
+        }
+        lines(k,p2,type='l',col=colors[i],lty=2,lwd=2)
+        lines(quantile(xlim,c(0.6,0.7)),quantile(ylim,rep(1-i*0.04,2)),
+              type='l',col=colors[i],lwd=2)
+        text(quantile(xlim,0.73),quantile(ylim,1-i*0.04),pos=4,labels=text[i])
+    }
+    lines(quantile(xlim,c(0.2,0.3)),quantile(ylim,rep(0.92,2)),
+          type='l',lwd=2)
+    text(quantile(xlim,0.33),quantile(ylim,0.92),pos=4,labels="GM12878")
+    lines(quantile(xlim,c(0.2,0.3)),quantile(ylim,rep(0.88,2)),
+          type='l',lwd=2,lty=2)
+    text(quantile(xlim,0.33),quantile(ylim,0.88),pos=4,labels="K562")
+}
+
+p0plot_scale2 <- function(quant,text){
+  p0s <- matrix(0,length(quant),6)
+    for(i in 1:length(quant)){
+        index1_0 <- (quant[[i]][,1]==0 & quant[[i]][,2]!=0) |
+                    (quant[[i]][,1]!=0 & quant[[i]][,2]==0)
+        index2_0 <- (quant[[i]][,3]==0 & quant[[i]][,4]!=0) |
+                    (quant[[i]][,3]!=0 & quant[[i]][,4]==0)
+        index1_00 <- quant[[i]][,1]==0 & quant[[i]][,2]==0
+        index2_00 <- quant[[i]][,3]==0 & quant[[i]][,4]==0
+        rep11_0 <- quant[[i]][index1_0,1]
+        rep12_0 <- quant[[i]][index1_0,2]
+        rep21_0 <- quant[[i]][index2_0,3]
+        rep22_0 <- quant[[i]][index2_0,4]
+        allunits1 <- length(index1_00)
+        both0prop1 <- round(sum(index1_00) / allunits1,3)
+        one0prop1 <- round(sum(index1_0) / allunits1, 3)
+        bothnon0prop1 <- 1-both0prop1-one0prop1
+        allunits2 <- length(index2_00)
+        both0prop2 <- round(sum(index2_00) / allunits2,3)
+        one0prop2 <- round(sum(index2_0) / allunits2, 3)
+        bothnon0prop2 <- 1-both0prop2-one0prop2
+        p0s[i,1:3] <- c(both0prop1,one0prop1,bothnon0prop1)
+        p0s[i,4:6] <- c(both0prop2,one0prop2,bothnon0prop2)
+    }
+  nacol <- paste(rep(c("GM12878","K562"),each=3),rep(c("0,0","0,1","1,1"),2),sep=" ")
+  rownames(p0s) <- text
+  colnames(p0s) <- nacol
+    p0s
 }
 
 ## CAT plot between replicates
-catplot <- function(quant,cuts,colors,text,xlim,ylim,xlab,ylab,main,stringent=TRUE){
+catplot <- function(quant,medians,fpkmmedian,cut,colors,text,xlim,ylim,xlab,ylab,
+                    main,stringent=TRUE){
+    cutD <- log2(cut)-fpkmmedian
+    cuts <- 2^(cutD+medians)
     for(i in 1:length(quant)){
-        if(!stringent) quant[[i]][quant[[i]]==0] <- cuts[i]
+        if(!stringent)  quant[[i]][quant[[i]]==0] <- cuts[i]
         quant[[i]] <- log2(quant[[i]])
         fc1 <- quant[[i]][,1] - quant[[i]][,3]
         fc2 <- quant[[i]][,2] - quant[[i]][,4]
@@ -142,12 +213,14 @@ catplot <- function(quant,cuts,colors,text,xlim,ylim,xlab,ylab,main,stringent=TR
 }
 
 ## CAT plot between average of two replicates and microarray
-catplot_microarray <- function(quant,cuts,array,colors,text,xlim,ylim,
+catplot_microarray <- function(quant,medians,fpkmmedian,cut,array,colors,text,xlim,ylim,
                                xlab,ylab,main,stringent=TRUE){
     load(array)
     seq_names <- rownames(quant[[1]])[!is.na(match(rownames(quant[[1]]),array_names))]
+    cutD <- log2(cut)-fpkmmedian
+    cuts <- 2^(cutD+medians)
     for(i in 1:length(quant)){
-        if(!stringent) quant[[i]][quant[[i]]==0] <- cuts[i]
+        if(!stringent)  quant[[i]][quant[[i]]==0] <- cuts[i]
         quant[[i]] <- log2(quant[[i]][seq_names,])
         fc1 <- (quant[[i]][,1] + quant[[i]][,2] - quant[[i]][,3] - quant[[i]][,4])/2
         if(stringent){
@@ -174,12 +247,15 @@ catplot_microarray <- function(quant,cuts,array,colors,text,xlim,ylim,
 ## shiny server
 colors <- c("brown","red","royalblue","seagreen","olivedrab1","purple",
             "maroon1","black","orange","yellow")
-labels <- c("rsem","rsem_pme","flux","cuff_s","cuff_t","sailfish","express","naive")
+labels <- c("RSEM tpm","RSEM tpmpme","Flux Capacitor","Cufflinks with STAR","Cufflinks with Tophat","Sailfish","eXpress","Naive")
 shinyServer(function(input, output) {
     packs <- reactive({
+      cat(input$protocol,'\t',input$genetype,"\n")
         load(paste0(input$protocol,"_g.rda"))
         medians <- hkctr(quant)
-        thresholds <- 2^(input$cutD+medians)
+      FPKMmedian <- sum(medians[4:5])/2
+      cutD <- log2(input$cutFPKM)-FPKMmedian
+        thresholds <- 2^(cutD+medians)
         quant <- typefilter(quant,input$genetype)
         quant <- cutfilter(quant,thresholds)
         cat(thresholds,"\n")
@@ -189,7 +265,7 @@ shinyServer(function(input, output) {
         colors2 <- colors[which(all0kick)]
         medians <- medians[all0kick]
         thresholds <- thresholds[all0kick]
-        list(quant=quant,thresholds=thresholds,medians=medians,labels=labels,colors=colors2)
+        list(quant=quant,medians=medians,labels=labels,colors=colors2,FPKMmedian=FPKMmedian)
     })
     output$caption <- renderText({
         input$protocol
@@ -198,36 +274,40 @@ shinyServer(function(input, output) {
         pack <- packs()
         sdaplot_scale(pack$quant,pack$medians,pack$colors,pack$labels,
                       xlim=c(input$xstart1,input$xend1),ylim=c(input$ystart1,input$yend1),
-                      xlab="D: A-log2(median(ObsSgl_ctr))",ylab="SD",main=input$genetype)
+                      xlab="Detrended log signal",ylab="SD",main=NULL)
     })
     output$p0plot <- renderPlot({
         pack <- packs()
-        p0plot_scale(pack$quant,pack$medians,step=0.1,pack$colors,pack$labels,
+        p0plot_scale1(pack$quant,pack$medians,step=0.1,pack$colors,pack$labels,
                      xlim=c(input$xstart2,input$xend2),ylim=c(input$ystart2,input$yend2),
-                     xlab="D: log2(k)-log2(median(ObsSgl_ctr))",ylab="Proportion",main=input$genetype)
+                     xlab="Detrended log signal",ylab="Proportion",main=NULL)
+    })
+    output$p0stbl <- renderTable({
+        pack <- packs()
+        p0plot_scale2(pack$quant,pack$labels)
     })
     output$catplot1 <- renderPlot({
         pack <- packs()
-        catplot(pack$quant,pack$thresholds,pack$colors,pack$labels,
+        catplot(pack$quant,pack$medians,pack$FPKMmedian,input$constant1,pack$colors,pack$labels,
                 xlim=c(input$xstart3,input$xend3),ylim=c(input$ystart3,input$yend3),
-                xlab="Size of list",ylab="proportion in common",main=input$genetype)
+                xlab="Size of list",ylab="Proportion in common",main=NULL)
     })
     output$catplot2 <- renderPlot({
         pack <- packs()
-        catplot(pack$quant,pack$thresholds,pack$colors,pack$labels,
+        catplot(pack$quant,pack$medians,pack$FPKMmedian,input$constant1,pack$colors,pack$labels,
                 xlim=c(input$xstart3,input$xend3),ylim=c(input$ystart3,input$yend3),
-                xlab="Size of list",ylab="proportion in common",main=input$genetype,stringent=F)
+                xlab="Size of list",ylab="Proportion in common",main=NULL,stringent=F)
     })
     output$catplotarray1 <- renderPlot({
         pack <- packs()
-        catplot_microarray(pack$quant,pack$thresholds,"array.rda",pack$colors,pack$labels,
+        catplot_microarray(pack$quant,pack$medians,pack$FPKMmedian,input$constant2,"array.rda",pack$colors,pack$labels,
                            xlim=c(input$xstart4,input$xend4),ylim=c(input$ystart4,input$yend4),
-                           xlab="Size of list",ylab="proportion in common",main=input$genetype)
+                           xlab="Size of list",ylab="Proportion in common",main=NULL)
     })
     output$catplotarray2 <- renderPlot({
         pack <- packs()
-        catplot_microarray(pack$quant,pack$thresholds,"array.rda",pack$colors,pack$labels,
+        catplot_microarray(pack$quant,pack$medians,pack$FPKMmedian,input$constant2,"array.rda",pack$colors,pack$labels,
                            xlim=c(input$xstart4,input$xend4),ylim=c(input$ystart4,input$yend4),
-                           xlab="Size of list",ylab="proportion in common",main=input$genetype,stringent=F)
+                           xlab="Size of list",ylab="Proportion in common",main=NULL,stringent=F)
     })
 })
